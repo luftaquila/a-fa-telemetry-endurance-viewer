@@ -1,12 +1,14 @@
 function setup() {
+  document.getElementById('warn').style.display = "none";
+  document.getElementById('download').style.display = "block";
+
   // set chart
   let uplot = new uPlot(config, null, document.getElementById("chart"));
 
   // assign resize handler
   window.addEventListener("resize", e => {
     uplot.setSize({
-      width: window.innerWidth - 100,
-      height: window.innerHeight - 200,
+      width: window.innerWidth * 0.96,
     });
   });
 
@@ -19,10 +21,34 @@ function setup() {
       if (!response.ok) {
         alert('Failed to fetch dataset');
       }
-      return response.arrayBuffer();
+
+      const size = parseInt(response.headers.get('content-length'));
+      const reader = response.body.getReader();
+      let rcv = 0;
+
+      return new ReadableStream({
+        start(controller) {
+          function push() {
+            reader.read().then(({ done, value }) => {
+              if (done) {
+                controller.close();
+                return;
+              }
+              rcv += value.byteLength;
+              document.getElementById('percent').innerText = (rcv / size * 100).toFixed(0);
+              controller.enqueue(value);
+              push();
+            });
+          }
+          push();
+        }
+      });
     })
+    .then((stream) => new Response(stream))
+    .then((response) => response.arrayBuffer())
     .then((data) => {
-      process(uplot, window.MessagePack.decode(new Uint8Array(data)));
+      document.getElementById('download').innerHTML = "데이터 파싱 중...";
+      setTimeout(() => process(uplot, window.MessagePack.decode(new Uint8Array(data))), 50);
     });
 }
 
@@ -134,6 +160,9 @@ function process(uplot, record) {
   }
 
   uplot.setData(result);
+
+  document.getElementById('download').style.display = "none";
+  document.getElementById('main').style.display = "block";
 }
 
 function push(type, log, result) {
@@ -165,6 +194,10 @@ let param_cnt = 1;
 let log_cnt = 0;
 
 const types = {
+  "ACCEL_x":                             { scale: "G",       unit: "g",   name: "ACCEL_x" },
+  "ACCEL_y":                             { scale: "G",       unit: "g",   name: "ACCEL_y" },
+  "ACCEL_z":                             { scale: "G",       unit: "g",   name: "ACCEL_z" },
+
   "BMS_dcl":                             { scale: "A",       unit: "A",   name: "BMS_dcl" },
   "BMS_ccl":                             { scale: "A",       unit: "A",   name: "BMS_ccl" },
   "BMS_temp_max":                        { scale: "C",       unit: "°C",  name: "BMS_temp_max" },
@@ -173,9 +206,7 @@ const types = {
   "BMS_capacity":                        { scale: "AH",      unit: "Ah",  name: "BMS_capacity" },
   "BMS_voltage":                         { scale: "HV",      unit: "V",   name: "BMS_voltage" },
   "BMS_current":                         { scale: "A",       unit: "A",   name: "BMS_current" },
-  "ACCEL_x":                             { scale: "G",       unit: "g",   name: "ACCEL_x" },
-  "ACCEL_y":                             { scale: "G",       unit: "g",   name: "ACCEL_y" },
-  "ACCEL_z":                             { scale: "G",       unit: "g",   name: "ACCEL_z" },
+
   "INV_modulation_index":                { scale: "ETC",     unit: "",    name: "INV_modulation_index" },
   "INV_flux_weakening_output":           { scale: "A",       unit: "A",   name: "INV_flux_weakening_output" },
   "INV_Id_command":                      { scale: "A",       unit: "A",   name: "INV_Id_command" },
@@ -233,6 +264,12 @@ const types = {
   "INV_temp_igbt_max":                   { scale: "C",       unit: "°C",  name: "INV_temp_igbt_max" },
   "INV_temp_gatedriver":                 { scale: "C",       unit: "°C",  name: "INV_temp_gatedriver" }
 };
+
+let html = "<option disabled selected>데이터 선택</option>";
+Object.keys(types).forEach(x => {
+  html += `<option value='${x}'>${x}</option>`;
+});
+document.getElementById('select-data').innerHTML = html;
 
 function generateColors(numColors) {
   const colors = [];
@@ -384,5 +421,3 @@ dateFormat.i18n = {
   ]
 };
 Date.prototype.format = function (mask, utc) { return dateFormat(this, mask, utc); };
-
-setup();

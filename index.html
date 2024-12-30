@@ -5,20 +5,41 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>2023 FSK 내구레이스 주행 데이터 뷰어</title>
+  <title>FSK 2023 내구레이스 주행 데이터</title>
 
   <link rel="stylesheet" href="src/style.css" />
+  <link rel="stylesheet" href="lib/btn.css" />
   <link rel="stylesheet" href="lib/uplot/dist/uPlot.min.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
   <link rel="icon" type="image/x-icon" href="favicon.ico">
 </head>
 
 <body>
-  <div class="header">
+  <div id="root">
+    <div class="header">
+      <h1>FSK 2023 내구레이스 주행 데이터</h1>
+    </div>
 
-  </div>
+    <div id="warn" class="container">
+      <h2>⚠️</h2>
+      <div>확인 버튼을 누르면 약 80MB 크기의 데이터를 다운로드합니다.</div>
+      <div style="margin-top: 1rem;">
+        <span class="btn green" onclick="setup();"><i class="fas fw fa-check"></i>확인</span>
+      </div>
+    </div>
 
-  <div class="container">
-    <div id="chart"></div>
+    <div id="download" class="container">
+      다운로드 중... <span id="percent">0</span>%
+    </div>
+
+    <div id="main" class="container">
+      <div id="toolbar">
+        <select id="select-data"></select>
+        <span class="btn blue" onclick="add();"><i class="fas fw fa-add"></i>추가</span>
+      </div>
+
+      <div id="chart"></div>
+    </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@msgpack/msgpack@3.0.0-beta2/dist.es5+umd/msgpack.min.js"></script>
