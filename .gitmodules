@@ -1,0 +1,3 @@
+[submodule "lib/uplot"]
+	path = lib/uplot
+	url = https://github.com/leeoniya/uPlot.git
