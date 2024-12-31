@@ -52,8 +52,12 @@
 
     <div id="main" class="container">
       <div id="toolbar">
-        <select id="select-data"></select>
-        <span class="btn small blue" onclick="add();"><i class="fas fw fa-add"></i>추가</span>
+        <select id="select-data">
+          <option disabled selected>데이터 선택</option>
+            <option>데이터 전체 추가</option>
+            <option>데이터 전체 제거</option>
+        </select>
+        <span id="add" class="btn small blue"><i class="fas fw fa-add"></i>추가</span>
       </div>
 
       <div id="chart"></div>

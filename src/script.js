@@ -76,7 +76,7 @@ function process(record) {
           log.parsed.temp_igbt_b = log.parsed.igbt.b;
           log.parsed.temp_igbt_c = log.parsed.igbt.c;
           log.parsed.temp_igbt_max = log.parsed.igbt.max.temperature;
-          log.parsed.temp_gatedriveer = log.parsed.gatedriver;
+          log.parsed.temp_gatedriver = log.parsed.gatedriver;
           delete log.parsed.igbt;
           delete log.parsed.gatedriver;
           push('INV', log, result);
@@ -275,11 +275,11 @@ const types = {
   "INV_temp_gatedriver":                 { scale: "C",       unit: "°C",  name: "INV_temp_gatedriver" }
 };
 
-let html = "<option disabled selected>데이터 선택</option>";
+let html = "";
 Object.keys(types).forEach(x => {
-  html += `<option value='${x}'>${x}</option>`;
+  html += `<option>${x}</option>`;
 });
-document.getElementById('select-data').innerHTML = html;
+document.getElementById('select-data').innerHTML += html;
 
 function generateColors(numColors) {
   const colors = [];
@@ -289,7 +289,8 @@ function generateColors(numColors) {
   const seededRandom = (function (seed) {
     let currentSeed = seed;
     return function () {
-      return ((currentSeed * 9301 + 49297) % 233280) / 233280;
+      currentSeed = (currentSeed * 9301 + 49297) % 233280;
+      return currentSeed / 233280;
     };
   })(seed);
 
@@ -382,20 +383,71 @@ const config = {
 
 let data_cnt = 0;
 
-function add() {
+document.getElementById('select-data').addEventListener("change", () => {
+  let value = document.getElementById('select-data').value.trim();
+  let add = document.getElementById('add');
+
+  if (value && value === '데이터 전체 제거') {
+    add.classList.remove('blue');
+    add.classList.add('red');
+    add.innerHTML = '<i class="fas fw fa-minus"></i>제거</span>';
+  } else {
+    add.classList.remove('red');
+    add.classList.add('blue');
+    add.innerHTML = '<i class="fas fw fa-add"></i>추가</span>';
+  }
+});
+
+document.getElementById('add').addEventListener("click", () => {
   let value = document.getElementById('select-data').value.trim();
 
-  if (value && value !== '데이터 선택' && !names.find(x => x === value)) {
-    data_cnt++;
-    uplot.addSeries(series[param[value]], data_cnt);
-    current.push(result[param[value]]);
-    names.push(value);
-    uplot.setData(current);
-    uplot.setScale('x', {
-      min: uplot.data[0][0],
-      max: uplot.data[0][uplot.data[0].length - 1],
-    });
+  if (!value) {
+    return;
   }
+
+  switch (value) {
+    case '데이터 선택':
+      return;
+
+    case '데이터 전체 추가':
+    case '데이터 전체 제거':
+      for (let i = 1; i < uplot.data.length; i++) {
+        uplot.delSeries(1);
+      }
+
+      data_cnt = 0;
+      names = [];
+      current = [];
+      current.push(result[0]);
+      uplot.setData(current);
+
+      if (value === '데이터 전체 추가') {
+        for (let key of Object.keys(types)) {
+          add_series(key);
+        }
+        break;
+      } else {
+        break;
+      }
+
+    default:
+      if (!names.find(x => x === value)) {
+        add_series(value);
+      }
+      break;
+  }
+});
+
+function add_series(value) {
+  data_cnt++;
+  names.push(value);
+  current.push(result[param[value]]);
+  uplot.addSeries(series[param[value]], data_cnt);
+  uplot.setData(current);
+  uplot.setScale('x', {
+    min: uplot.data[0][0],
+    max: uplot.data[0][uplot.data[0].length - 1],
+  });
 }
 
 
