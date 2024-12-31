@@ -344,6 +344,40 @@ const config = {
     touchZoomPlugin(),
     wheelZoomPlugin({ factor: 0.75 })
   ],
+  cursor: {
+    dataIdx: (self, seriesIdx, hoveredIdx, cursorXVal) => {
+      let xValues = self.data[0];
+      let yValues = self.data[seriesIdx];
+
+      if (yValues[hoveredIdx] == null) {
+        let nonNullLft = null,
+          nonNullRgt = null,
+          i;
+
+        i = hoveredIdx;
+        while (nonNullLft == null && i-- > 0) {
+          if (yValues[i] != null)
+            nonNullLft = i;
+        }
+
+        i = hoveredIdx;
+        while (nonNullRgt == null && i++ < yValues.length) {
+          if (yValues[i] != null)
+            nonNullRgt = i;
+        }
+
+        let rgtVal = nonNullRgt == null ? Infinity : xValues[nonNullRgt];
+        let lftVal = nonNullLft == null ? -Infinity : xValues[nonNullLft];
+
+        let lftDelta = cursorXVal - lftVal;
+        let rgtDelta = rgtVal - cursorXVal;
+
+        hoveredIdx = lftDelta <= rgtDelta ? nonNullLft : nonNullRgt;
+      }
+
+      return hoveredIdx;
+    }
+  },
 };
 
 let data_cnt = 0;
