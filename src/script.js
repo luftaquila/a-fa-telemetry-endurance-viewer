@@ -39,7 +39,7 @@ function setup() {
     .then((stream) => new Response(stream))
     .then((response) => response.arrayBuffer())
     .then((data) => {
-      document.getElementById('download').innerHTML = "데이터 파싱 중...";
+      document.getElementById('download').innerHTML = "렌더링 중...";
       setTimeout(() => process(window.MessagePack.decode(new Uint8Array(data))), 50);
     });
 }
@@ -47,7 +47,7 @@ function setup() {
 function process(record) {
   document.getElementById("detail").innerHTML = 
     `Emrax 208 / PM100DX / 70s7p Orion BMS 2 / 253kg<br>
-     <span>군산 / ${new Date(record[0].datetime).format("yyyy-mm-dd")} ${new Date(record[0].datetime).format('HH:MM:ss.l')} ~ ${new Date(record[record.length - 1].datetime).format('HH:MM:ss.l')}</span>`;
+     <span>${new Date(record[0].datetime).format("yyyy-mm-dd")} ${new Date(record[0].datetime).format('HH:MM:ss.l')} ~ ${new Date(record[record.length - 1].datetime).format('HH:MM:ss.l')} 군산</span>`;
 
   for (let log of record) {
     if (log.source === 'CAN') {
@@ -120,12 +120,8 @@ function process(record) {
           break;
 
         case "CAN_INV_MOTOR_POS":
-        case "CAN_INV_CURRENT":
-        case "CAN_INV_VOLTAGE":
-        case "CAN_INV_FLUX":
-        case "CAN_INV_REF":
-        case "CAN_INV_TORQUE":
-        case "CAN_INV_FLUX_WEAKING":
+          // don't remember the exact formula; copied from the legacy a-fa-telemetry code
+          log.parsed.vehicle_speed = log.parsed.motor_speed * 2 * Math.PI * 0.24765 * 60 / (1000 * 5.188235);
           push('INV', log, result);
           break;
 
@@ -145,6 +141,15 @@ function process(record) {
           delete log.parsed.RUN;
           delete log.parsed.RUN_FAULT_HI;
           delete log.parsed.RUN_FAULT_LO;
+          push('INV', log, result);
+          break;
+
+        case "CAN_INV_CURRENT":
+        case "CAN_INV_VOLTAGE":
+        case "CAN_INV_FLUX":
+        case "CAN_INV_REF":
+        case "CAN_INV_TORQUE":
+        case "CAN_INV_FLUX_WEAKING":
           push('INV', log, result);
           break;
       }
@@ -202,75 +207,76 @@ let param_cnt = 1;
 let log_cnt = 0;
 
 const types = {
-  "BMS_dcl":                             { scale: "A",       unit: "A",   name: "BMS_dcl" },
-  "BMS_ccl":                             { scale: "A",       unit: "A",   name: "BMS_ccl" },
-  "BMS_temp_max":                        { scale: "C",       unit: "°C",  name: "BMS_temp_max" },
-  "BMS_temp_min":                        { scale: "C",       unit: "°C",  name: "BMS_temp_min" },
-  "BMS_soc":                             { scale: "PERCENT", unit: "%",   name: "BMS_soc" },
-  "BMS_capacity":                        { scale: "AH",      unit: "Ah",  name: "BMS_capacity" },
-  "BMS_voltage":                         { scale: "HV",      unit: "V",   name: "BMS_voltage" },
-  "BMS_current":                         { scale: "A",       unit: "A",   name: "BMS_current" },
+  "BMS_dcl":                             { scale: "A",    unit: "A",    name: "BMS_dcl" },
+  "BMS_ccl":                             { scale: "A",    unit: "A",    name: "BMS_ccl" },
+  "BMS_temp_max":                        { scale: "C",    unit: "°C",   name: "BMS_temp_max" },
+  "BMS_temp_min":                        { scale: "C",    unit: "°C",   name: "BMS_temp_min" },
+  "BMS_soc":                             { scale: "%",    unit: "%",    name: "BMS_soc" },
+  "BMS_capacity":                        { scale: "AH",   unit: "Ah",   name: "BMS_capacity" },
+  "BMS_voltage":                         { scale: "HV",   unit: "V",    name: "BMS_voltage" },
+  "BMS_current":                         { scale: "A",    unit: "A",    name: "BMS_current" },
 
-  "ACCEL_x":                             { scale: "G",       unit: "g",   name: "ACCEL_x" },
-  "ACCEL_y":                             { scale: "G",       unit: "g",   name: "ACCEL_y" },
-  "ACCEL_z":                             { scale: "G",       unit: "g",   name: "ACCEL_z" },
+  "ACCEL_x":                             { scale: "G",    unit: "g",    name: "ACCEL_x" },
+  "ACCEL_y":                             { scale: "G",    unit: "g",    name: "ACCEL_y" },
+  "ACCEL_z":                             { scale: "G",    unit: "g",    name: "ACCEL_z" },
 
-  "INV_modulation_index":                { scale: "ETC",     unit: "",    name: "INV_modulation_index" },
-  "INV_flux_weakening_output":           { scale: "A",       unit: "A",   name: "INV_flux_weakening_output" },
-  "INV_Id_command":                      { scale: "A",       unit: "A",   name: "INV_Id_command" },
-  "INV_Iq_command":                      { scale: "A",       unit: "A",   name: "INV_Iq_command" },
-  "INV_commanded_torque":                { scale: "Nm",      unit: "Nm",  name: "INV_commanded_torque" },
-  "INV_torque_feedback":                 { scale: "Nm",      unit: "Nm",  name: "INV_torque_feedback" },
-  "INV_power_on_timer":                  { scale: "ETC",     unit: "",    name: "INV_power_on_timer" },
-  "INV_fault_POST":                      { scale: "ETC",     unit: "",    name: "INV_fault_POST" },
-  "INV_fault_RUN":                       { scale: "ETC",     unit: "",    name: "INV_fault_RUN" },
-  "INV_vsm_state":                       { scale: "ETC",     unit: "",    name: "INV_vsm_state" },
-  "INV_inverter_state":                  { scale: "ETC",     unit: "",    name: "INV_inverter_state" },
-  "INV_relay_state":                     { scale: "ETC",     unit: "",    name: "INV_relay_state" },
-  "INV_inverter_run_mode":               { scale: "ETC",     unit: "",    name: "INV_inverter_run_mode" },
-  "INV_inverter_active_discharge_state": { scale: "ETC",     unit: "",    name: "INV_inverter_active_discharge_state" },
-  "INV_inverter_command_mode":           { scale: "ETC",     unit: "",    name: "INV_inverter_command_mode" },
-  "INV_inverter_enable_state":           { scale: "ETC",     unit: "",    name: "INV_inverter_enable_state" },
-  "INV_inverter_start_mode_active":      { scale: "ETC",     unit: "",    name: "INV_inverter_start_mode_active" },
-  "INV_inverter_enable_lockout":         { scale: "ETC",     unit: "",    name: "INV_inverter_enable_lockout" },
-  "INV_direction_command":               { scale: "ETC",     unit: "",    name: "INV_direction_command" },
-  "INV_bms_active":                      { scale: "ETC",     unit: "",    name: "INV_bms_active" },
-  "INV_bms_limiting_torque":             { scale: "ETC",     unit: "",    name: "INV_bms_limiting_torque" },
-  "INV_limit_max_speed":                 { scale: "ETC",     unit: "",    name: "INV_limit_max_speed" },
-  "INV_low_speed_limiting":              { scale: "ETC",     unit: "",    name: "INV_low_speed_limiting" },
-  "INV_flux_command":                    { scale: "FLUX",    unit: "Wb",  name: "INV_flux_command" },
-  "INV_flux_feedback":                   { scale: "FLUX",    unit: "Wb",  name: "INV_flux_feedback" },
-  "INV_Id_feedback":                     { scale: "A",       unit: "A",   name: "INV_Id_feedback" },
-  "INV_Iq_feedback":                     { scale: "A",       unit: "A",   name: "INV_Iq_feedback" },
-  "INV_dc_bus_voltage":                  { scale: "HV",      unit: "V",   name: "INV_dc_bus_voltage" },
-  "INV_output_voltage":                  { scale: "HV",      unit: "V",   name: "INV_output_voltage" },
-  "INV_VAB_Vd_voltage":                  { scale: "HV",      unit: "V",   name: "INV_VAB_Vd_voltage" },
-  "INV_VBC_Vq_voltage":                  { scale: "HV",      unit: "V",   name: "INV_VBC_Vq_voltage" },
-  "INV_phaseA":                          { scale: "A",       unit: "A",   name: "INV_phaseA" },
-  "INV_phaseB":                          { scale: "A",       unit: "A",   name: "INV_phaseB" },
-  "INV_phaseC":                          { scale: "A",       unit: "A",   name: "INV_phaseC" },
-  "INV_dc_bus_current":                  { scale: "A",       unit: "A",   name: "INV_dc_bus_current" },
-  "INV_motor_angle":                     { scale: "DEG",     unit: "°",   name: "INV_motor_angle" },
-  "INV_motor_speed":                     { scale: "RPM",     unit: "rpm", name: "INV_motor_speed" },
-  "INV_electrical_output_freq":          { scale: "FREQ",    unit: "Hz",  name: "INV_electrical_output_freq" },
-  "INV_delta_resolver_filtered":         { scale: "DEG",     unit: "°",   name: "INV_delta_resolver_filtered" },
-  "INV_digital_fwd_enable":              { scale: "ETC",     unit: "",    name: "INV_digital_fwd_enable" },
-  "INV_digital_rev_enable":              { scale: "ETC",     unit: "",    name: "INV_digital_rev_enable" },
-  "INV_digital_brake_switch":            { scale: "ETC",     unit: "",    name: "INV_digital_brake_switch" },
-  "INV_analog_accel":                    { scale: "LV",      unit: "V",   name: "INV_analog_accel" },
-  "INV_analog_brake":                    { scale: "LV",      unit: "V",   name: "INV_analog_brake" },
-  "INV_ref_1v5":                         { scale: "LV",      unit: "V",   name: "INV_ref_1v5" },
-  "INV_ref_2v5":                         { scale: "LV",      unit: "V",   name: "INV_ref_2v5" },
-  "INV_ref_5v":                          { scale: "LV",      unit: "V",   name: "INV_ref_5v" },
-  "INV_ref_12v":                         { scale: "LV",      unit: "V",   name: "INV_ref_12v" },
-  "INV_torque_shudder":                  { scale: "Nm",      unit: "Nm",  name: "INV_torque_shudder" },
-  "INV_temp_motor":                      { scale: "C",       unit: "°C",  name: "INV_temp_motor" },
-  "INV_temp_controlboard":               { scale: "C",       unit: "°C",  name: "INV_temp_controlboard" },
-  "INV_temp_igbt_a":                     { scale: "C",       unit: "°C",  name: "INV_temp_igbt_a" },
-  "INV_temp_igbt_b":                     { scale: "C",       unit: "°C",  name: "INV_temp_igbt_b" },
-  "INV_temp_igbt_c":                     { scale: "C",       unit: "°C",  name: "INV_temp_igbt_c" },
-  "INV_temp_igbt_max":                   { scale: "C",       unit: "°C",  name: "INV_temp_igbt_max" },
-  "INV_temp_gatedriver":                 { scale: "C",       unit: "°C",  name: "INV_temp_gatedriver" }
+  "INV_modulation_index":                { scale: "ETC",  unit: "",     name: "INV_modulation_index" },
+  "INV_flux_weakening_output":           { scale: "A",    unit: "A",    name: "INV_flux_weakening_output" },
+  "INV_Id_command":                      { scale: "A",    unit: "A",    name: "INV_Id_command" },
+  "INV_Iq_command":                      { scale: "A",    unit: "A",    name: "INV_Iq_command" },
+  "INV_commanded_torque":                { scale: "Nm",   unit: "Nm",   name: "INV_commanded_torque" },
+  "INV_torque_feedback":                 { scale: "Nm",   unit: "Nm",   name: "INV_torque_feedback" },
+  "INV_power_on_timer":                  { scale: "CNT",  unit: "",     name: "INV_power_on_timer" },
+  "INV_fault_POST":                      { scale: "ETC",  unit: "",     name: "INV_fault_POST" },
+  "INV_fault_RUN":                       { scale: "ETC",  unit: "",     name: "INV_fault_RUN" },
+  "INV_vsm_state":                       { scale: "ETC",  unit: "",     name: "INV_vsm_state" },
+  "INV_inverter_state":                  { scale: "ETC",  unit: "",     name: "INV_inverter_state" },
+  "INV_relay_state":                     { scale: "ETC",  unit: "",     name: "INV_relay_state" },
+  "INV_inverter_run_mode":               { scale: "ETC",  unit: "",     name: "INV_inverter_run_mode" },
+  "INV_inverter_active_discharge_state": { scale: "ETC",  unit: "",     name: "INV_inverter_active_discharge_state" },
+  "INV_inverter_command_mode":           { scale: "ETC",  unit: "",     name: "INV_inverter_command_mode" },
+  "INV_inverter_enable_state":           { scale: "ETC",  unit: "",     name: "INV_inverter_enable_state" },
+  "INV_inverter_start_mode_active":      { scale: "ETC",  unit: "",     name: "INV_inverter_start_mode_active" },
+  "INV_inverter_enable_lockout":         { scale: "ETC",  unit: "",     name: "INV_inverter_enable_lockout" },
+  "INV_direction_command":               { scale: "ETC",  unit: "",     name: "INV_direction_command" },
+  "INV_bms_active":                      { scale: "ETC",  unit: "",     name: "INV_bms_active" },
+  "INV_bms_limiting_torque":             { scale: "ETC",  unit: "",     name: "INV_bms_limiting_torque" },
+  "INV_limit_max_speed":                 { scale: "ETC",  unit: "",     name: "INV_limit_max_speed" },
+  "INV_low_speed_limiting":              { scale: "ETC",  unit: "",     name: "INV_low_speed_limiting" },
+  "INV_flux_command":                    { scale: "FLUX", unit: "Wb",   name: "INV_flux_command" },
+  "INV_flux_feedback":                   { scale: "FLUX", unit: "Wb",   name: "INV_flux_feedback" },
+  "INV_Id_feedback":                     { scale: "A",    unit: "A",    name: "INV_Id_feedback" },
+  "INV_Iq_feedback":                     { scale: "A",    unit: "A",    name: "INV_Iq_feedback" },
+  "INV_dc_bus_voltage":                  { scale: "HV",   unit: "V",    name: "INV_dc_bus_voltage" },
+  "INV_output_voltage":                  { scale: "HV",   unit: "V",    name: "INV_output_voltage" },
+  "INV_VAB_Vd_voltage":                  { scale: "HV",   unit: "V",    name: "INV_VAB_Vd_voltage" },
+  "INV_VBC_Vq_voltage":                  { scale: "HV",   unit: "V",    name: "INV_VBC_Vq_voltage" },
+  "INV_phaseA":                          { scale: "A",    unit: "A",    name: "INV_phaseA" },
+  "INV_phaseB":                          { scale: "A",    unit: "A",    name: "INV_phaseB" },
+  "INV_phaseC":                          { scale: "A",    unit: "A",    name: "INV_phaseC" },
+  "INV_dc_bus_current":                  { scale: "A",    unit: "A",    name: "INV_dc_bus_current" },
+  "INV_motor_angle":                     { scale: "DEG",  unit: "°",    name: "INV_motor_angle" },
+  "INV_motor_speed":                     { scale: "RPM",  unit: "rpm",  name: "INV_motor_speed" },
+  "INV_electrical_output_freq":          { scale: "FREQ", unit: "Hz",   name: "INV_electrical_output_freq" },
+  "INV_delta_resolver_filtered":         { scale: "DEG",  unit: "°",    name: "INV_delta_resolver_filtered" },
+  "INV_vehicle_speed":                   { scale: "SPD",  unit: "km/h", name: "INV_vehicle_speed" },
+  "INV_digital_fwd_enable":              { scale: "ETC",  unit: "",     name: "INV_digital_fwd_enable" },
+  "INV_digital_rev_enable":              { scale: "ETC",  unit: "",     name: "INV_digital_rev_enable" },
+  "INV_digital_brake_switch":            { scale: "ETC",  unit: "",     name: "INV_digital_brake_switch" },
+  "INV_analog_accel":                    { scale: "LV",   unit: "V",    name: "INV_analog_accel" },
+  "INV_analog_brake":                    { scale: "LV",   unit: "V",    name: "INV_analog_brake" },
+  "INV_ref_1v5":                         { scale: "LV",   unit: "V",    name: "INV_ref_1v5" },
+  "INV_ref_2v5":                         { scale: "LV",   unit: "V",    name: "INV_ref_2v5" },
+  "INV_ref_5v":                          { scale: "LV",   unit: "V",    name: "INV_ref_5v" },
+  "INV_ref_12v":                         { scale: "LV",   unit: "V",    name: "INV_ref_12v" },
+  "INV_torque_shudder":                  { scale: "Nm",   unit: "Nm",   name: "INV_torque_shudder" },
+  "INV_temp_motor":                      { scale: "C",    unit: "°C",   name: "INV_temp_motor" },
+  "INV_temp_controlboard":               { scale: "C",    unit: "°C",   name: "INV_temp_controlboard" },
+  "INV_temp_igbt_a":                     { scale: "C",    unit: "°C",   name: "INV_temp_igbt_a" },
+  "INV_temp_igbt_b":                     { scale: "C",    unit: "°C",   name: "INV_temp_igbt_b" },
+  "INV_temp_igbt_c":                     { scale: "C",    unit: "°C",   name: "INV_temp_igbt_c" },
+  "INV_temp_igbt_max":                   { scale: "C",    unit: "°C",   name: "INV_temp_igbt_max" },
+  "INV_temp_gatedriver":                 { scale: "C",    unit: "°C",   name: "INV_temp_gatedriver" }
 };
 
 let html = "";
