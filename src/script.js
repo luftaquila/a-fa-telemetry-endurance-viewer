@@ -112,9 +112,9 @@ function process(record) {
           break;
 
         case "CAN_INV_DIGITAL_IN":
-          log.parsed.digital_fwd_enable = log.parsed.DIN1;
-          log.parsed.digital_rev_enable = log.parsed.DIN2;
-          log.parsed.digital_brake_switch = log.parsed.DIN3;
+          log.parsed.digital_fwd_enable = Number(log.parsed.DIN1);
+          log.parsed.digital_rev_enable = Number(log.parsed.DIN2);
+          log.parsed.digital_brake_switch = Number(log.parsed.DIN3);
           delete log.parsed.DIN1;
           delete log.parsed.DIN2;
           delete log.parsed.DIN3;
