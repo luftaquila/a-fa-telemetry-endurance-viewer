@@ -11,6 +11,7 @@ function setup() {
   window.addEventListener("resize", e => {
     uplot.setSize({
       width: window.innerWidth * 0.96,
+      height: window.innerHeight - 15 * parseFloat(getComputedStyle(document.documentElement).fontSize)
     });
   });
 
@@ -163,6 +164,10 @@ function process(record) {
 
   current.push(result[0]);
   uplot.setData(current);
+  uplot.setScale('x', {
+    min: uplot.data[0][0],
+    max: uplot.data[0][uplot.data[0].length - 1],
+  });
 
   document.getElementById('download').style.display = "none";
   document.getElementById('main').style.display = "block";
@@ -330,8 +335,8 @@ const series = [
 ];
 
 const config = {
-  width: window.innerWidth - 100,
-  height: window.innerHeight - 200,
+  width: window.innerWidth * 0.96,
+  height: window.innerHeight - 15 * parseFloat(getComputedStyle(document.documentElement).fontSize),
   ms: true,
   series: [series[0]],
   axes: axes,
@@ -352,6 +357,10 @@ function add() {
     current.push(result[param[value]]);
     names.push(value);
     uplot.setData(current);
+    uplot.setScale('x', {
+      min: uplot.data[0][0],
+      max: uplot.data[0][uplot.data[0].length - 1],
+    });
   }
 }
 

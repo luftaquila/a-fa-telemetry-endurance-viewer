@@ -16,13 +16,31 @@
 
 <body>
   <div id="root">
-    <div class="header">
-      <!-- <h1>FSK 2023 내구레이스 주행 데이터</h1> -->
+    <div id="header">
+      <h1>FSK 2023 내구 주행 데이터</h1>
+      <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="https://github.com/luftaquila/a-fa-telemetry-endurance-viewer" target="_blank"
+          style="display: flex; align-items: center; text-decoration: none;">
+          <i class="fab fa-github" style="font-size: 16px; color: #222222; margin-right: 0.4rem;"></i>
+          GitHub
+        </a>
+
+        <a href="https://dnf.luftaquila.io" target="_blank"
+          style="display: flex; align-items: center; text-decoration: none;">
+          <img
+            src="https://dnf.luftaquila.io/uploads/default/optimized/1X/798b28a3a1f3b53a6d1701f183ef05a41e56eb15_2_32x32.svg"
+            style="width:16px; height:16px; margin-right: 0.4rem;">
+          자작자동차포럼
+        </a>
+      </div>
+      <div style="margin-top: 0.5rem;">
+        Emrax 208 / PM100DX / Orion BMS 2 / 70s7p 294V
+      </div>
     </div>
 
     <div id="warn" class="container">
       <h2>⚠️</h2>
-      <div>확인 버튼을 누르면 약 80MB 크기의 데이터를 다운로드합니다.</div>
+      <div>약 80MB 크기의 데이터가 다운로드됩니다.</div>
       <div style="margin-top: 1rem;">
         <span class="btn green" onclick="setup();"><i class="fas fw fa-check"></i>확인</span>
       </div>
@@ -35,7 +53,7 @@
     <div id="main" class="container">
       <div id="toolbar">
         <select id="select-data"></select>
-        <span class="btn blue" onclick="add();"><i class="fas fw fa-add"></i>추가</span>
+        <span class="btn small blue" onclick="add();"><i class="fas fw fa-add"></i>추가</span>
       </div>
 
       <div id="chart"></div>

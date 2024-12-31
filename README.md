@@ -14,7 +14,7 @@ python -m http.server 80
 
 Then open [http://localhost](http://localhost)
 
-## Manipulate dataset with Python
+## Python data manipulation
 
 ### Prerequisites
 
