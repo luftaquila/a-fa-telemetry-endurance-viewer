@@ -4,17 +4,6 @@ function setup() {
   document.getElementById('warn').style.display = "none";
   document.getElementById('download').style.display = "block";
 
-  // set chart
-  uplot = new uPlot(config, null, document.getElementById("chart"));
-
-  // assign resize handler
-  window.addEventListener("resize", e => {
-    uplot.setSize({
-      width: window.innerWidth * 0.96,
-      height: window.innerHeight - 17 * parseFloat(getComputedStyle(document.documentElement).fontSize)
-    });
-  });
-
   // load dataset
   fetch('data.msgpack', {
     method: 'GET',
@@ -167,11 +156,16 @@ function process(record) {
   }
 
   current.push(result[0]);
-  uplot.setData(current);
-  uplot.setScale('x', {
-    min: uplot.data[0][0],
-    max: uplot.data[0][uplot.data[0].length - 1],
+  uplot = new uPlot(config, null, document.getElementById("chart"));
+
+  window.addEventListener("resize", e => {
+    uplot.setSize({
+      width: window.innerWidth * 0.96,
+      height: window.innerHeight - 17 * parseFloat(getComputedStyle(document.documentElement).fontSize)
+    });
   });
+
+  uplot.setData(current);
 
   document.getElementById('download').style.display = "none";
   document.getElementById('main').style.display = "block";
@@ -446,10 +440,6 @@ function add_series(value) {
   current.push(result[param[value]]);
   uplot.addSeries(series[param[value]], data_cnt);
   uplot.setData(current);
-  uplot.setScale('x', {
-    min: uplot.data[0][0],
-    max: uplot.data[0][uplot.data[0].length - 1],
-  });
 }
 
 
