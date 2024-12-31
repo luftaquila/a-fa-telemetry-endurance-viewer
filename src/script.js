@@ -1,9 +1,11 @@
+let uplot;
+
 function setup() {
   document.getElementById('warn').style.display = "none";
   document.getElementById('download').style.display = "block";
 
   // set chart
-  let uplot = new uPlot(config, null, document.getElementById("chart"));
+  uplot = new uPlot(config, null, document.getElementById("chart"));
 
   // assign resize handler
   window.addEventListener("resize", e => {
@@ -48,11 +50,11 @@ function setup() {
     .then((response) => response.arrayBuffer())
     .then((data) => {
       document.getElementById('download').innerHTML = "데이터 파싱 중...";
-      setTimeout(() => process(uplot, window.MessagePack.decode(new Uint8Array(data))), 50);
+      setTimeout(() => process(window.MessagePack.decode(new Uint8Array(data))), 50);
     });
 }
 
-function process(uplot, record) {
+function process(record) {
   for (let log of record) {
     if (log.source === 'CAN') {
       switch (log.key) {
@@ -159,7 +161,8 @@ function process(uplot, record) {
     }
   }
 
-  uplot.setData(result);
+  current.push(result[0]);
+  uplot.setData(current);
 
   document.getElementById('download').style.display = "none";
   document.getElementById('main').style.display = "block";
@@ -188,16 +191,14 @@ function push(type, log, result) {
 }
 
 let result = [[]];
+let current = [];
+let names = [];
 
 let param = { "timestamp": 0 };
 let param_cnt = 1;
 let log_cnt = 0;
 
 const types = {
-  "ACCEL_x":                             { scale: "G",       unit: "g",   name: "ACCEL_x" },
-  "ACCEL_y":                             { scale: "G",       unit: "g",   name: "ACCEL_y" },
-  "ACCEL_z":                             { scale: "G",       unit: "g",   name: "ACCEL_z" },
-
   "BMS_dcl":                             { scale: "A",       unit: "A",   name: "BMS_dcl" },
   "BMS_ccl":                             { scale: "A",       unit: "A",   name: "BMS_ccl" },
   "BMS_temp_max":                        { scale: "C",       unit: "°C",  name: "BMS_temp_max" },
@@ -206,6 +207,10 @@ const types = {
   "BMS_capacity":                        { scale: "AH",      unit: "Ah",  name: "BMS_capacity" },
   "BMS_voltage":                         { scale: "HV",      unit: "V",   name: "BMS_voltage" },
   "BMS_current":                         { scale: "A",       unit: "A",   name: "BMS_current" },
+
+  "ACCEL_x":                             { scale: "G",       unit: "g",   name: "ACCEL_x" },
+  "ACCEL_y":                             { scale: "G",       unit: "g",   name: "ACCEL_y" },
+  "ACCEL_z":                             { scale: "G",       unit: "g",   name: "ACCEL_z" },
 
   "INV_modulation_index":                { scale: "ETC",     unit: "",    name: "INV_modulation_index" },
   "INV_flux_weakening_output":           { scale: "A",       unit: "A",   name: "INV_flux_weakening_output" },
@@ -279,20 +284,14 @@ function generateColors(numColors) {
   const seededRandom = (function (seed) {
     let currentSeed = seed;
     return function () {
-      currentSeed = (currentSeed * 9301 + 49297) % 233280;
-      return currentSeed / 233280;
+      return ((currentSeed * 9301 + 49297) % 233280) / 233280;
     };
   })(seed);
 
   const randomizedIndexes = Array.from({ length: numColors }, (_, i) => i).sort(() => seededRandom() - 0.5);
 
   for (let i = 0; i < numColors; i++) {
-    const hue = Math.round((randomizedIndexes[i] * hueStep) % 360);
-    const saturation = 70;
-    const lightness = 50;
-
-    const color = `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    colors.push(color);
+    colors.push(`hsl(${Math.round((randomizedIndexes[i] * hueStep) % 360)}, 70%, 50%)`);
   }
 
   return colors;
@@ -310,11 +309,12 @@ const scales = Object.values(types).filter((item, index, self) =>
 
 const axes = [
   { values: (self, ticks) => ticks.map(rawValue => new Date(rawValue).format("HH:MM:ss\nl")) },
-  ...scales.map(x => ({
+  ...scales.map((x, i) => ({
     scale: x.scale,
-    values: (self, ticks) => ticks.map(rawValue => rawValue.toFixed(1) + x.unit),
+    values: (self, ticks) => ticks.map(rawValue => rawValue.toFixed(rawValue >= 100 ? 0 : 1) + x.unit),
     grid: { show: false, },
     ticks: { show: false, },
+    side: i % 2 ? 1 : 3,
   }))
 ];
 
@@ -325,7 +325,7 @@ const series = [
     scale: x.scale,
     stroke: colors[color_idx++],
     spanGaps: true,
-    value: (self, rawValue) => (rawValue ? rawValue : (rawValue === 0 ? 0 : '-')) + x.unit,
+    value: (self, rawValue) => (rawValue ? rawValue.toFixed(rawValue >= 100 ? 0 : 1) : (rawValue === 0 ? 0 : '-')) + x.unit,
   }))
 ];
 
@@ -333,13 +333,28 @@ const config = {
   width: window.innerWidth - 100,
   height: window.innerHeight - 200,
   ms: true,
-  series: series,
+  series: [series[0]],
   axes: axes,
   plugins: [
     touchZoomPlugin(),
     wheelZoomPlugin({ factor: 0.75 })
   ],
 };
+
+let data_cnt = 0;
+
+function add() {
+  let value = document.getElementById('select-data').value.trim();
+
+  if (value && value !== '데이터 선택' && !names.find(x => x === value)) {
+    data_cnt++;
+    uplot.addSeries(series[param[value]], data_cnt);
+    current.push(result[param[value]]);
+    names.push(value);
+    uplot.setData(current);
+  }
+}
+
 
 /* new Date().format() ********************************************************/
 var dateFormat = function () {

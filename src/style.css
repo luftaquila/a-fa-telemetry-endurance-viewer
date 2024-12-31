@@ -21,10 +21,6 @@ h1 {
   font-size: 1.8rem;
 }
 
-.btn i.fw {
-  margin-right: 0.5rem;
-}
-
 #toolbar {
   margin-bottom: 2rem;
 }
@@ -32,4 +28,8 @@ h1 {
 #select-data {
   margin-right: 1rem;
   font-size: 1rem;
+}
+
+.btn i.fw {
+  margin-right: 0.5rem;
 }
