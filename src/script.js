@@ -11,7 +11,7 @@ function setup() {
   window.addEventListener("resize", e => {
     uplot.setSize({
       width: window.innerWidth * 0.96,
-      height: window.innerHeight - 15 * parseFloat(getComputedStyle(document.documentElement).fontSize)
+      height: window.innerHeight - 17 * parseFloat(getComputedStyle(document.documentElement).fontSize)
     });
   });
 
@@ -56,6 +56,10 @@ function setup() {
 }
 
 function process(record) {
+  document.getElementById("detail").innerHTML = 
+    `Emrax 208 / PM100DX / 70s7p Orion BMS 2 / 253kg<br>
+     <span>군산 / ${new Date(record[0].datetime).format("yyyy-mm-dd")} ${new Date(record[0].datetime).format('HH:MM:ss.l')} ~ ${new Date(record[record.length - 1].datetime).format('HH:MM:ss.l')}</span>`;
+
   for (let log of record) {
     if (log.source === 'CAN') {
       switch (log.key) {
@@ -337,7 +341,7 @@ const series = [
 
 const config = {
   width: window.innerWidth * 0.96,
-  height: window.innerHeight - 15 * parseFloat(getComputedStyle(document.documentElement).fontSize),
+  height: window.innerHeight - 17 * parseFloat(getComputedStyle(document.documentElement).fontSize),
   ms: true,
   series: [series[0]],
   axes: axes,
@@ -409,7 +413,7 @@ document.getElementById('add').addEventListener("click", () => {
     case '데이터 선택':
       return;
 
-    case '데이터 전체 추가':
+    case '데이터 전체 추가 (PC 환경 권장)':
     case '데이터 전체 제거':
       for (let i = 1; i < uplot.data.length; i++) {
         uplot.delSeries(1);
@@ -421,14 +425,12 @@ document.getElementById('add').addEventListener("click", () => {
       current.push(result[0]);
       uplot.setData(current);
 
-      if (value === '데이터 전체 추가') {
+      if (value === '데이터 전체 추가 (PC 환경 권장)') {
         for (let key of Object.keys(types)) {
           add_series(key);
         }
-        break;
-      } else {
-        break;
       }
+      break;
 
     default:
       if (!names.find(x => x === value)) {

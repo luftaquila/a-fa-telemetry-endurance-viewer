@@ -1,18 +1,20 @@
-# a-fa-telemetry-endurance-viewer
+# fsk-endurance
 
 https://fsk-endurance.luftaquila.io
 
-Formula Student Korea 2023 Endurance Race telemetry data viewer
+Formula Student Korea 2023 Endurance Race telemetry data viewer.
+
+Team A-FA, Ajou University.
 
 ## Run locally
 
 ```sh
-git clone https://github.com/luftaquila/a-fa-telemetry-endurance-viewer.git --recursive
-cd a-fa-telemetry-endurance-viewer
+git clone https://github.com/luftaquila/fsk-endurance.git --recursive
+cd fsk-endurance
 python -m http.server 80
 ```
 
-Then open [http://localhost](http://localhost)
+Open [http://localhost](http://localhost)
 
 ## Python data manipulation
 
@@ -37,8 +39,10 @@ def load():
             data = f.read()
     else:
         print("Downloading dataset...")
-        response = requests.get("https://github.com/luftaquila/a-fa-telemetry-endurance-viewer/raw/refs/heads/main/data.msgpack")
+        response = requests.get("https://github.com/luftaquila/fsk-endurance/raw/refs/heads/main/data.msgpack")
         data = response.content
+        with open("data.msgpack", "wb") as f:
+            f.write(data)
 
     print("Parsing dataset...")
     return msgpack.unpackb(data, raw=False)

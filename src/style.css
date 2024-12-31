@@ -3,11 +3,12 @@
 }
 
 #header {
-  height: 7rem;
+  height: 8.5rem;
 }
 
-#warn, #download {
-  margin-top: 30vh;
+#warn,
+#download {
+  margin-top: 20vh;
   text-align: center;
   vertical-align: middle;
 }
@@ -18,13 +19,12 @@
 
 #main {
   display: none;
-  margin-bottom: 3rem;
+  margin-bottom: 2rem;
 }
 
-h1 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-size: 1.8rem;
+#detail {
+  margin-top: 0.5rem;
+  line-height: 1.5rem;
 }
 
 #toolbar {
@@ -36,11 +36,17 @@ h1 {
   font-size: 1rem;
 }
 
-i.fw {
-  margin-right: 0.5rem;
+h1 {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+  font-size: 1.8rem;
 }
 
 a {
   color: #007bff;
   text-decoration: none;
+}
+
+i.fw {
+  margin-right: 0.5rem;
 }
