@@ -58,8 +58,8 @@ function process(record) {
           break;
 
         case 'CAN_BMS_TEMP':
-          log.parsed.temp_max = log.parsed.temperature.max.value;
-          log.parsed.temp_min = log.parsed.temperature.min.value;
+          log.parsed.temp_cell_max = log.parsed.temperature.max.value;
+          log.parsed.temp_cell_min = log.parsed.temperature.min.value;
           delete log.parsed.temperature;
           push('BMS', log, result);
           break;
@@ -209,8 +209,8 @@ let log_cnt = 0;
 const types = {
   "BMS_dcl":                             { scale: "A",    unit: "A",    name: "BMS_dcl" },
   "BMS_ccl":                             { scale: "A",    unit: "A",    name: "BMS_ccl" },
-  "BMS_temp_max":                        { scale: "C",    unit: "°C",   name: "BMS_temp_max" },
-  "BMS_temp_min":                        { scale: "C",    unit: "°C",   name: "BMS_temp_min" },
+  "BMS_temp_cell_max":                   { scale: "C",    unit: "°C",   name: "BMS_temp_cell_max" },
+  "BMS_temp_cell_min":                   { scale: "C",    unit: "°C",   name: "BMS_temp_cell_min" },
   "BMS_soc":                             { scale: "%",    unit: "%",    name: "BMS_soc" },
   "BMS_capacity":                        { scale: "AH",   unit: "Ah",   name: "BMS_capacity" },
   "BMS_voltage":                         { scale: "HV",   unit: "V",    name: "BMS_voltage" },
